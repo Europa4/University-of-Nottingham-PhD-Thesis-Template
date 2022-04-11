@@ -1,0 +1,172 @@
+\chapter{Thimble Methods for Complex Integrals}
+\label{ch:Thimble_methods}
+
+Path integrals, despite their uses outlined above, are plagued by the so called 'sign problem'. Consider a path integral of the form 
+\begin{equation}
+    \label{eqn:path_integral}
+    A = \int_{\mathbb{R}^n} \mathcal{D}\varphi \; e^{-\I(\varphi)},
+\end{equation}
+with real variables $\varphi$. Frequently in physics $\I$ will be purely imaginary, often of the form $\I(\varphi) = iS(\varphi)$, meaning the integrand is oscillatory with a constant amplitude but variable phase. This variable phase is the root cause of this sign problem, and makes the integral difficult or impossible to evaluate even using numerical methods. This is due to the subtle cancellations that will occur between each peak and trough in the integrand. These cannot be captured on a computer with finite resolution as the frequency of the oscillations increase. Consequently, the numerical error grows exponentially with the domain of the integral, dwarfing the result for any non-trivial integral \cite{tanizaki2014real, tanizaki2015lefschetz}. A solution to this problem is provided by a multidimensional version of Cauchy's theorem. By promoting the real integration variable $\varphi$ to a complex variable, denoted $\phi$, the integration contour can be deformed into the complex plane without altering the result of the integral. All that is then required is to systematically find an appropriate new contour, where $\I(\phi)$ is now complex valued and damps the oscillations \cite{tanizaki2014real, witten2010new}.
+
+\section{Picard-Lefshetz Thimbles}
+\label{sec:Picard-Lefshetz_Thimbles}
+Picard-Lefshetz Thimbles are integration manifolds, denoted $\mathcal{M}_{PL}$, that match the above criteria \cite{fujii2013hybrid, ulybyshev2017path, cristoforetti2012new}. 
+To begin, promote the real integration variable to a complex number $\varphi \rightarrow \phi = a + ib$ and deform the integration manifold by solving the flow equation
+\begin{equation}
+\label{eqn:flow}
+    \frac{\td \phi}{\td \tau} = \overline{\frac{\pd \I}{\pd \phi}},
+\end{equation}
+where the overbar denotes complex conjugation and $\tau$ represents the mathematical quantity known as 'flow time'. Ideal initial conditions are provided by finding the critical point or points of $\I$, which are defined by \begin{equation}
+    \label{eqn:critical}
+    \left. \frac{\pd \I}{\pd \phi} \right|_{crit} = 0.
+\end{equation}
+ Once $\tau$ is taken to infinity, the extent of $\mathcal{M}_{PL}$ is mapped \cite{cristoforetti2013monte, cristoforetti2014efficient}. In practice it takes an infinitely long flow time to move away from a critical point, so the initial conditions should be taken from a small region near the critical point instead. It can be seen by applying the chain rule and (\ref{eqn:flow}) that
+\begin{equation}
+    \begin{split}
+        \frac{\pd \I}{\pd \tau} &= \frac{\pd \I}{\pd \phi} \frac{\pd \phi}{\pd \tau} \\
+        &= \frac{\pd \I}{\pd \phi} \overline{\frac{\pd \I}{\pd \phi} } \\
+        &= \left| \frac{\pd \I}{\pd \phi}  \right|^2,
+    \end{split}
+\end{equation}
+and as the flow time is increased the real part of $\I$ increases monotonically while the imaginary part remains constant as $\phi$ moves away from the critical point. As a result, the integrand in (\ref{eqn:path_integral}) is exponentially suppressed, while keeping the frequency fixed at the value it had at the critical point. \newline \newline
+Frequently (\ref{eqn:flow}) will have multiple solutions, even for the same critical point \cite{tanizaki2014real, yuya2016study}. An example of this is shown in section \ref{sec:PL_example}. Using the requirement that the real part of the integrand suppresses the oscillations we require that $\re[\I(\phi)] \rightarrow \infty$ as $|\phi| \rightarrow \infty$. This allows us to define convergent and divergent regions in the Argand plane of $\phi$. Only the solution which is in a convergent region as $|\phi| \rightarrow \infty$ is the solution that corresponds to the Picard-Lefshetz thimble. Examples of these regions are shown in Figure \ref{fig:regions} where \ref{sfig:phi_squared_region} corresponds to an example with which I will continue later, and \ref{sfig:airy_region} corresponds to to the exponent of the integrand of the Airy function with $x = 1$. As can be seen from \ref{sfig:airy_region}, it is not required that the entire thimble exist within convergent regions, only that the thimble is within a convergent region for large $|\phi|$.
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width = \textwidth]{3-Thimble Methods/Images/phi_squared_regions.pdf}
+        \caption{$\I = -\frac{1}{2}i\phi^2$}
+        \label{sfig:phi_squared_region}
+    \end{subfigure}
+    %\hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width = \textwidth]{3-Thimble Methods/Images/Airy_regions.pdf}
+        \caption{$\I = -i\left( \frac{\phi^3}{3} + \phi\right)$}
+        \label{sfig:airy_region}
+    \end{subfigure}
+    \caption{The convergent regions and thimbles of two simple example functions.}
+    \label{fig:regions}
+\end{figure}
+\newline \newline
+When there are multiple critical points given by (\ref{eqn:critical}), each of these critical points should be flowed to create its own thimble. In principle all of these thimbles must then be combined, as they will all contribute to the deformed integral, though in practice often only the dominant thimbles are considered. However it is not easy to see in advance which critical points create dominant thimbles and, to exacerbate the problem, thimbles that initially appeared dominant may undergo cancellations from other thimbles producing a final result that is controlled by a thimble which initially appeared sub-dominant. \newline \newline
+Although the integrand along the thimble has a constant phase, as will be shown in (\ref{eqn:jacobian_integral}), a small variable phase remains due to the transformation between manifolds. This is referred to as the 'residual sign problem' \cite{fujii2013hybrid, cristoforetti2014efficient}. There is also a second potential source of phase variance in the case where two or more thimbles exist. Although the thimbles are linked, the requirement that $\im[\I]$ is constant applies individually to each thimble. As a result, there can be a discrete jump in the phase of $\I$ at the connection. This is referred to as the 'global sign problem'. Usually both of these effects are small enough that traditional techniques can resolve them, but can be a continued source of problems. \newline \newline 
+Combining all of the above with the need to find the critical point for a non-trivial $\I$ and it is obvious why a full Picard-Lefshetz thimble can be problematic to calculate on a computer. What's needed is a method that does not rely on isolating the critical points and can be done in general, regardless of the number of integration variables or number of thimbles. 
+\subsection{Picard-Lefshetz Example}
+\label{sec:PL_example}
+Using $\I(\varphi) = -\frac{1}{2}i\varphi^2$ as a toy model and complexifying $\varphi \rightarrow \phi$, it can be seen that by (\ref{eqn:flow}) the flow equation is \begin{equation}
+\label{eqn:PL_example_flow}
+    \frac{\td \phi}{\td \tau} = -\overline{i\phi}
+\end{equation}
+and a single critical point as per (\ref{eqn:critical}) at $\phi = 0$. By separating the real and imaginary parts of $\phi = a + ib$, and taking $\phi(\tau = 0) = \epsilon$ rather than $0$, the solution of (\ref{eqn:PL_example_flow}) gives 
+\begin{equation}
+    \begin{split}
+        a &= \epsilon \cosh(\tau) \\
+        b &= \epsilon \sinh(\tau).
+    \end{split}
+\end{equation}
+These can be combined to give $a = \pm b$ in the limit $\epsilon \rightarrow 0$. $a = b$ can be seen to be the correct solution, this successfully suppresses the oscilliations, while $a = - b$ does not. This matches the results as above as $a = b$ tends to $\infty$ within a convergent region of \ref{sfig:phi_squared_region}, while $a = -b$ does not. \newline \newline
+Fortunately, as the example given here has only one integration variable, a second method may be used to verify this. By noting that along the thimble $\text{Im}[\I(\phi)]$ must be constant and separating the real and imaginary parts of $\phi \rightarrow a + ib$ in the usual way, we see that
+\begin{equation}
+    \im[\I(\phi)] = - \frac{1}{2}i(a^2 - b^2) = K,
+\end{equation}
+where $K$ is the constant phase. We also know that the thimble passes through the critical point at $\phi = 0$, and can use this to fix $K = 0$. As a result this method this method also recovers $a = \pm b$ in a far more compact way.
+\section{Generalised Thimbles}
+\label{sec:Generalised_Thimbles}
+\begin{figure}
+    \centering
+    \includegraphics[width = \textwidth]{3-Thimble Methods/Images/Flow_quiver.pdf}
+    \caption{The direction of flow for any point in the Argand plane}
+    \label{fig:quiver}
+\end{figure}
+As outlined in Section \ref{sec:Picard-Lefshetz_Thimbles}, the full Picard-Lefshetz thimble method has significant problems. However by noting that regardless of initial conditions the flow process leads asymptotically to the Picard-Lefshetz thimble, an example of which is shown in Figure \ref{fig:quiver}, a significant number of these problems can be avoided. Consequently the entire integration manifold can be flowed for some fixed flow time, which is typically finite, $\tau_{max}$ to create a so called 'Generalised Thimble'. This Generalised Thimble, if taken with $\tau_{max} = \infty$ automatically captures the correct combination of Picard-Lefshetz thimbles regardless of the number of critical points. By doing this there is no need to calculate the critical point of the function $\I$. This greatly simplifies the implementation on a computer. However, in compromise, the effectiveness of the thimble in reducing the sign problem is reduced inversely with the magnitude of $\tau_{max}$. \newline \newline
+By starting with the real n-dimensional integration manifold $\mathcal{M}_0 = \mathbb{R}^n$, and applying the flow equation, we can create a generalised thimble manifold $\mathcal{M}_\tau$ and define a Jacobian matrix 
+\begin{equation}
+    \label{eqn:jacobian_definition}
+    J_{ij} = \frac{\partial \phi_i}{\partial \varphi_j} 
+\end{equation}
+to transform between the two. This allows us to write the integral as
+\begin{equation}
+    \label{eqn:jacobian_integral}
+    \begin{split}
+        \int_{\mathcal{M}_0} \mathcal{D}\varphi \; e^{-\I(\varphi)} &= \int_{\mathcal{M}_\tau} \mathcal{D}\phi \; e^{-\I(\phi)} \\
+        &= \int_{\mathcal{M}_0} \mathcal{D}\varphi \; \det(J) e^{-\I(\phi)}
+    \end{split}
+\end{equation}
+and doing so reveals an important part of this approach: by transforming the integrand onto a thimble the details of the integral are written in the transform, not the integral itself.
+
+Clearly it is extremely important to calculate $J$, and it will become more important still in later chapters. Fortunately this calculation isn't difficult, as by combining the flow equation (\ref{eqn:flow}) and the definition of the Jacobian (\ref{eqn:jacobian_definition}) we find 
+\begin{equation}
+    \label{eqn:Jacobian_calculation}
+    \frac{\td}{\td \tau} J_{ij} = \sum_s \overline{\frac{\partial^2 \I}{\partial \phi_i \partial \phi_s} J_{sj}}
+\end{equation}
+noting that at $\tau = 0$, $J = \mathbb{I}$. \newline \newline
+A note of caution must be expressed however. In practical usage, generalised thimbles will usually be applied to problems using an MCMC technique to probe the manifold generated to create samples to evaluate integrals of the form in (\ref{eqn:jacobian_integral}). This works well, as presented later in this work. However as it is not possible to take $\tau$ to infinity on a computer, the generalised thimble will only ever be an approximation of the Picard-Lefshetz thimble. This is relevant when two thimbles connect, such as from a form of $\I$ with multiple critical points, as the region between the thimbles will highly curved and difficult to probe. This can lead to simulations getting trapped behind high potential walls in such areas and efficiency gains in this class of problem are the subject of ongoing study \cite{alexandru2017tempered}.
+\subsection{Generalised Thimble Example}
+\label{sec:GenThim_example}
+To reuse the example given in section \ref{sec:PL_example}, $\I(\varphi) = -\frac{1}{2}i\varphi^2$. Complexifying and separating in the same way as above $\phi \rightarrow a + ib$, and noting that $\phi(\tau = 0) = \varphi$ as the entire real manifold is being flowed rather than a small region around the critical point. For our example, (\ref{eqn:flow}) gives 
+\begin{equation}
+    \begin{split}
+        a &= \varphi \cosh (\tau) \\
+        b &= \varphi \sinh (\tau),
+    \end{split}
+\end{equation}
+similar to the Picard-Lefshetz example. These can then be combined to give
+\begin{equation}
+    b = \tanh(\tau) a,
+\end{equation}
+which, in the limit $\tau \rightarrow \infty$ recovers the thimble $a = b$, as calculated in Section \ref{sec:PL_example}. This example is also shown for a variety of flow times in Figure \ref{fig:Generalised_thimble_demo}. Clearly \ref{sfig:real} is intractable, but for even low flow times this simple case can be rendered trivial.
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width = \textwidth]{3-Thimble Methods/Images/thimble_multi.pdf}
+        \caption{}
+        \label{sfig:thimbles}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width = \textwidth]{3-Thimble Methods/Images/tau_0.0.pdf}
+        \caption{}
+        \label{sfig:real}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width = \textwidth]{3-Thimble Methods/Images/tau_0.1.pdf}
+        \caption{}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width = \textwidth]{3-Thimble Methods/Images/tau_0.5.pdf}
+        \caption{}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width = \textwidth]{3-Thimble Methods/Images/tau_1.0.pdf}
+        \caption{}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+        \centering
+        \includegraphics[width = \textwidth]{3-Thimble Methods/Images/tau_PL.pdf}
+        \caption{}
+    \end{subfigure}
+    \hfill
+    \caption{Showing the Picard-Lefshetz thimble, and how the Generalised Thimbles for a range of flow times.}
+    \label{fig:Generalised_thimble_demo}
+\end{figure}
+\section{Comparison to Langevin Dynamics}
+There are significant similarities between the Langevin approach and the thimble methods outlined above. Both methods rely on the complexification of real integration variables to suppress the sign problem, and find the imaginary component of the variable by introducing a flow process along a 'mathematical' i.e. non-physical time-like parameter \cite{fromm2013onset, mollgaard2013complex}. In Picard-Lefshetz theory, this flow time $\tau$ is used to map the thimble from a critical point as seen above. In Langevin dynamics however the flow equations are written with flow parameter $t_5$. After complexifying $\varphi \rightarrow \phi$ in the usual way the flow is given by
+\begin{equation}
+\label{eqn:Langevin}
+    \frac{\td \phi}{\td t_5} = \frac{\partial \I}{\partial \phi} + \eta,
+\end{equation}
+where $\eta$ represents a real Gaussian noise term \cite{aarts2014some, damgaard1987stochastic, sexty2014simulating}. The noise term regulates so called 'run-away' solutions \cite{PARISI1983393} and improves the overall stability of the simulations and combined with adaptive step size numerical solvers can suppress the problem entirely \cite{James:2012dna}. \newline \newline
+Unfortunately, despite significant early success, the technique has been found to suffer from convergence issues \cite{nowak2000monte, garcia1998langevin, makino2015complex}. A particularly relevant physical example is in the case of an equilibrium simulation the correlator function \begin{equation}
+    \langle \mathcal{O}_1(t) \mathcal{O}_2(t') \rangle = \text{Tr} \left( e^{-\beta H} \mathcal{O}_1(t) \mathcal{O}_2(t')\right),
+\end{equation}
+will not converge unless $t - t' < \beta$ where $\beta$ is the inverse temperature and given by $1/k_BT$ \cite{alexandru2016monte}. A bigger issue is where the technique converges but to an incorrect result \cite{James:2012dna}. In situations of physical interest, where no other technique can be used to verify results, this is an enormous problem and has resulted in the dynamical technique being largely superseded by thimble methods.

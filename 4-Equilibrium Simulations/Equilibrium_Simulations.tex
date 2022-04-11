@@ -1,0 +1,118 @@
+\chapter{Equilibrium Simulations}
+\label{ch:Equilibrium_Simulations}
+Before applying this new technique to non-equilibrium systems, it was first applied to well understood equilibrium situations to verify it. In order to do so the physical results of \cite{alexandru2016monte, alexandru2017schwinger} were reproduced and used as a basis for exploring more complicated systems.
+\section{$0 + 1D$ Correlators}
+\label{sec:0+1DEquilibrium}
+In the equilibrium $0 + 1D$ case, a periodic lattice was set up as per Figure [TBA]. A corresponding discritized action \begin{equation}
+    \I = -i\sum_{j = 0}^{N} \left[  \frac{\left(\phi_j - \phi_{j - 1} \right)^2}{2 \Delta t_j} + \left( \frac{\Delta t_j + \Delta t_{j -1}}{2}\right) \left( -\frac{1}{2}m^2 \phi_j^2 - \frac{\lambda}{4!}\phi_j^4 \right) \right],
+    \label{eqn:OneD_action}
+\end{equation}
+where $\Delta t_j$ varies with position along the contour such that 
+\begin{equation}
+    \Delta t_j = 
+    \begin{cases}
+        \td t  & \qquad 0 \leq j < N_t \\
+        -i\td t & \qquad N_t \leq j < N_t + N_\beta/2 \\
+        -\td t & \qquad N_t + N_\beta/2 \leq j < 2N_t + N_\beta/2 \\
+        -i\td t & \qquad 2N_t + N_\beta/2 \leq j < N_t + N_\beta,
+    \end{cases}
+\end{equation}
+and $N = 2N_t + N_\beta$ was set up. This was flowed in the manner outlined in Section \ref{sec:Generalised_Thimbles} to create a generalized thimble which could be sampled to compute correlation functions. This is done by noting that for any operator \begin{equation}
+\label{eqn:observable_samples}
+    \left \langle \hat{\mathcal{O}}(t) \right \rangle = \frac{\int \mathcal{D} \phi \; e^{-\mathcal{I}(\phi)} \hat{\mathcal{O}}}{\int \mathcal{D} \phi \; e^{-\mathcal{I}(\phi)}} = \frac{\left \langle e^{-i \text{Im}[\mathcal{I}(\phi)] + i\arg[\det(J)]} \hat{\mathcal{O}} \right \rangle_P}{\left \langle e^{-i \text{Im}[\mathcal{I}(\phi)] + i\arg[\det(J)]}\right \rangle_P},
+\end{equation}
+where the expectation values are evaluated by Monte-carlo sampling the integrals over a distribution P, defined as
+\begin{equation}
+\label{eqn:weight}
+    P(\phi) = e^{-\text{Re}[\mathcal{I}(\phi)] + \ln|\det(J)|}.
+\end{equation}
+This can be seen using \ref{eqn:jacobian_integral}, as the complex Jacobian determinant term can be combined with the existing exponential. Real terms can then be separated to provide the weight during the Markov process and improve convergence times. The result is then reweighted by the remaining imaginary parts to give a physical result. Unlike \cite{alexandru2016monte} however, the proposals were drawn on the complex manifold $\mathcal{M}$ and transported to the real manifold using the Jacobian. This maintained the requirement that the proposals be isotropic on the complex manifold, without attempting to adjust the proposals on the real manifold to account for the distortion introduced by the flow process. This algorithm is outlined here:
+\begin{enumerate}
+    \item Flow the system to $\tau_{max}$ using \ref{eqn:flow} and create the Jacobian using \ref{eqn:Jacobian_calculation} which transforms $\varphi_n \rightarrow \phi_n$.
+    \item Create a complex proposal vector $\eta$ on the manifold created in step 1 by drawing values from a normal distribution $\exp (-\eta^\dagger \eta/\delta^2$).
+    \item Transport the proposal vector to the real manifold by solving $\eta = J\Delta$ for the real space proposal $\Delta$. This is equivalent to having drawn the elements of $\Delta$ from a distribution given by
+    \begin{equation}
+    \label{eqn:eta_distribution}
+         g(\phi_{n+1}|\phi_{n}) = \frac{|\det J_n|}{\sqrt{\pi^{N_{tot}}\delta^{2N_{tot}}}}e^{-\Delta^T J_n^\dagger J_n \Delta/\delta^2}
+    \end{equation}
+    instead.
+    \item Create a new state $\varphi_{n + 1} = \varphi_n + \text{Re}(\Delta)$.
+    \item Flow the proposed state as in step (1).
+    \item Accept the proposal with a probability 
+    \begin{multline}
+        Pr = \\ \text{min}\left(e^{\text{Re}(\mathcal{I}_n) - \text{Re}(\mathcal{I}_{n + 1}) + 2\ln|\det J_{n + 1}| - 2\ln|\det J_n| + \Delta^T(J_n^\dagger J_n) \Delta/\delta^2 - \Delta^T(J_{n + 1}^\dagger J_{n+ 1}) \Delta/\delta^2} , 1\right)
+    \end{multline}
+    \item Store the result, regardless of the acceptance.
+\end{enumerate}
+This process is repeated until a Markov Chain of sufficient length is generated. Here $\delta$ is a parameter used to control the size of the proposal and correspondingly the step size around the manifold. The acceptance probability is calculated in the usual way for the Metropolis-Hastings algorithm, \begin{equation}
+    Pr = \min \left( \frac{P(\phi_{n+1})}{P(\phi_n)} \frac{g(\phi_n | \phi_{n+1})}{g(\phi_{n + 1} | \phi_n)}, 1\right),
+\end{equation}
+where  $P(\phi)$ is given in \ref{eqn:weight} and $g(\phi_{n+1}|\phi_{n})$ is the probability of proposing state $\phi_{n + 1}$ given state $\phi_n$ as used in \ref{eqn:eta_distribution}. Finding this to be systematically reliable for flow times up to $\tau_{max} = 0.25$, with a fixed step size $\delta = 0.1$, unit mass, $\td t = 0.2$, $\lambda \in [0, 24]$, $N_t = 12$, $N_\beta = 4$, and simulations were run for $5 \times 10^6$ Monte Carlo steps after the burn in. This process was completed for time separated correlators, as shown in Figure [TBA]. Clearly the results for $\lambda = 24$ match the work done in \cite{alexandru2016monte} well, despite the slight variation in the proposal production mechanism and acceptance probability. An LU decomposition was employed to calculate the determinant of $J$ directly. This decomposition was also used to solve the matrix equation in step 3. By drawing isotropic proposals on the complex manifold and transporting them to the real manifold for use, the problems introduced by the distortions along the flow path are not encountered meaning that the proposals do not need to be adjusted by an estimate of the action, as was done in \cite{alexandru2016monte}. These changes appear to have improved the convergence rate of the Markov chain, as comparable results were found with only 50\% of the update steps. 
+\newline \newline It is worth noting that this method of updating a lattice is unusual. Typically  a single site is chosen to be updated \cite{rothe2012lattice}. This is done so that a beneficial change in one region of the lattice is not rejected due to a larger detrimental change in another region, and as the proposals for each site should be independent, it makes no difference if a single site is considered or all sites at once. Computationally the improved convergence due to not rejecting beneficial updates outweighs the increased cost of recomputing the transition probability at each update. Unfortunately, this is not the case for the method employed here. Due to the high cost of both the flow process and the calculation of the determinant of the Jacobian, calculating this for each site update would not be practical. Consequently updates are performed by 'sweeping' the entire lattice at once. This naturally results in small scale proposals to improve the acceptance rate.
+\newline \newline Having established that these results match literature well, a further set of simulations were run with a much larger link size $\td t = 0.75$. This was done in part to test the large $t$ behaviour and check that it was consistent, while as a by product allowing the flow time to be set much higher. As shown in sections \ref{sec:PL_example} and \ref{sec:GenThim_example}, the flow is very sensitive to the action. Decreasing the link size, which appears inversely in the kinetic term, can cause the RHS values of \ref{eqn:flow} and \ref{eqn:Jacobian_calculation} to rapidly blow up. This can cause an adaptive step solver to become impractically slow, or worse cause a numerical overflow if the link size is set too small. However, as will be shown later, increasing the flow time is critical to finding results in reasonable wall clock time.\newline \newline
+This proved to be successful. The increased lattice spacing and increased flow time ensured that the results were convergent much quicker. A correlator generated with only $10^5$ MCMC updates with a flow time of $\tau = 2$, as shown in Figure [TBA] has smaller error while covering a much greater span of real time. In general, these characteristics were preferred, and moving forward all $0 + 1D$ simulations were run with larger link sizes and corresponding flow times.
+\section{$1 + 1D$ Correlators}
+Having verified the method in the $0 + 1D$ case, the lattice presented in Figure [TBA] was modified to include a spacial dimension. This is done in the usual way by 'stacking' $0 + 1D$ contours, such that sites can interact with their neighbours on nearby spacial layers. This gives an action of the form 
+\begin{multline}
+    \label{eqn:1D_Equilibrium_Action}
+    \I = -i \td x \sum_{j,n} \left[ \frac{(\phi_{j + 1, n} - \phi_{j, n})^2}{2\Delta t_j}  + \frac{\Delta t_j + \Delta t_{j - 1}}{2} \left( -\frac{(\phi_{j, n + 1} - \phi_{j, n})^2}{2 \td x^2} \right. \right. \\ - \left. \left. \frac{1}{2}m^2 \phi_{j,n}^2 - \frac{\lambda}{4!}\phi_{j,n}^4 \right) \right],
+\end{multline}
+where $\td x$ represents the spacing between the stacked layers. Baring the change in the lattice and action, the algorithm was implemented as described in Section \ref{sec:0+1DEquilibrium}. Unfortunately even with the limited parameters of $N_x = 8$, where $N_x$ is the number of spacial layers, the computational effort rapidly becomes insurmountable. This is because the total number of lattice sites is now given by $N = N_x(2N_t + N_\beta) = 144$, and step 1 of the process as outlined in Section \ref{sec:0+1DEquilibrium} requires the solution of $N + N^2$ complex coupled ODEs for each update of the MCMC chain. To compound this problem, calculations involving the Jacobian became increasingly prohibitive as the Jacobian itself is an $N \times N$ complex matrix. As a result, the majority of the results in this work were produced using a $0 + 1D$ model. However a small number of results were generated using this method as a demonstration, and are included in Figure [TBA].
+\section{Alternatives to Jacobian Calculation}
+As discussed previously the calculation and manipulation of the Jacobian is computationally very difficult. It was found in our implementation that operations relating to the Jacobain, either its calculation or use, accounted for more than 75\% of the computational time in the $0 + 1D$ case and more than 97\% in the $1 + 1D$ case. Clearly if a method could be developed that did not require the calculation and manipulation of the Jacobian, this would significantly increase the method's viability. To this end, two methods were trialed. However, neither had significant success.
+\subsection{The $J_0$ Method}
+\label{sec:J0}
+The $J_0$ method relies on the assumption that variations in the manifold $\mathcal{M}$ created by the update process are small enough that the Jacobian can be approximated to be constant. If this assumption is valid, then this immediately solves the issues outlined above as the Jacobian, its inverse, and determinant can be calculated once for the entire simulation. However, this imposes a tight requirement on the maximum value of the flow parameter $\tau$, due to the fact the manifold is increasingly sensitive to changes as $\tau$ increases due to the growing mode of \ref{eqn:flow}. In practice this results in a flow time limited to 0.1, even in the large physical time case outlined in Section \ref{sec:0+1DEquilibrium}. This poses a problem, as the sign problem is much less well suppressed at such a low flow time that the MCMC chain must be made much longer to compensate. This quickly erodes all speed improvements made by switching to a fixed Jacobian, and presents a new problem; the storage and processing of the much larger sets of data produced. Despite this the improvements to the rate of data generation were too impressive to ignore, and further attempts were made to increase the maximum viable flow time. \newline \newline
+The primary method for increasing the flow time came from a hybrid of this method with the original algorithm. While the benefits of calculating the Jacobian once per simulation were not worth the drawbacks, it may not required to calculate the Jacobian at each MCMC update either. By recalculating every $M$ updates, the preferred optimisation between speed and high flow time could be set by choosing a value for $M$. This was tested using the same set up as the large link $0 + 1D$ model discussed above with $\lambda = 24$. Selected results of the improvements for different values of $M$ are shown in Table \ref{tab:M_results}, with full results in Appendix [TBA].
+\begin{center}
+\begin{tabular}{|c|c|c|c|} 
+\hline
+$M$ & Time per update (ms) & $\tau$ & Accurate \\
+\hline
+1 & uhh & 0.1 & Yes \\
+\hline
+1 & uhh & 0.2 & Yes \\
+\hline
+1 & uhh & 0.5 & Yes \\
+\hline
+1 & uhh & 1 & Yes \\
+\hline
+10 & uhh & 0.1 & Yes \\
+\hline
+10 & uhh & 0.2 & Yes \\
+\hline
+10 & uhh & 0.5 & Yes \\
+\hline
+10 & uhh & 1 & Yes \\
+\hline
+
+\end{tabular}
+\label{tab:M_results}
+\end{center}
+The accuracy parameter was calculated by checking that the error calculated shared at least a 90\% overlap with the $M = 1$ case. The wall clock time of these simulations scaled as expected $t_{WC} \propto 1/M$. Although superficially this appears to provide a significant improvement, the requirement to 'fine tune' this parameter $M$ defeats much of the optimisation. As $J$ is non linearly dependant on the coupling strength $\lambda$, the process of finding a suitable combination of $M$ and $\tau$ must be repeated for every action. Pragmatically, this limits the use of this technique. It is of significant note however that \ref{eqn:Jacobian_calculation} depends only on the second derivative of the action. This means that the Jacobian is constant for free fields, and this property was used extensively in Section TBA.\newline \newline
+As this project reached its conclusion a new method for achieving this was proposed, inspired by the methods used in adaptive step size ODE solvers. As there are two methods for evaluating the flow of a scalar field, solving \ref{eqn:flow} and $\phi(\tau_{max}) = J \phi(0)$. \ref{eqn:flow} can then be used to check the accuracy of the Jacobian. This, in effect, allows $M$ to by dynamically set, similar to the step size in an ODE solver. As calculating \ref{eqn:flow} is computationally cheap compared to solving for the entire Jacobian this can be done at each update step and the results of the two methods can be compared. If they are within a defined tolerance, the Jacobian is kept. If they are not, the Jacobian is recalculated. This method, while obviously slower than a tuned fixed $M$ model, is a considerable improvement over the standard technique in the low $\lambda$ region in which it has been tested decreasing the average time required to perform an MC update by approximately 50\%. In large part this is due to the fact that as the system burns in, the manifold is changing more rapidly than at any other point in the simulation, and having an adaptive $J$ update rate ensures that this process is done as quickly as possible in a way that would be impossible even for the tuned approach to match. Unfortunately due to time constraints this technique has not been explored well in general, but remains an open avenue of investigation.
+
+\subsection{BiCGSTAB}
+Although not the only contributor to the enormous fraction of the run time that the Jacobain takes up, solving matrix equations of the form $\Delta = J\eta$ represents a significant computational cost of the algorithm. Replacing this matrix equation with an iterative solver therefore could significantly improve the run time, especially if it could be combined with other changes to reduce or eliminate a dependence on the Jacobian in other aspects of the program. The iterative solver used for this was the Biconjugate Gradient Stablized Method, or BiCGSTAB. This was implemented in the standard way:
+\begin{enumerate}
+    \item Choose an estimated guess for $\Delta$, denoted $\Delta_0$. Due to the fact that $\eta$ has been drawn from a random distribution, it is difficult to estimate a reasonable $\Delta_0$ and consequently $\Delta_0$ was typically set with all elements at 0.
+    \item Create a new vector $r_0$ = $\eta$ - $J\Delta_0$, and its unit vector $\hat{r_0}$.
+    \item Define scalars $\rho_0 = \alpha = \omega_0 = \beta = 1$
+    \item Define vectors $v_0 = p_0 = h = s = t = 0$.
+    \item $\rho_{i + 1} = \hat{r_0} \cdot r_i$
+    \item $\beta = \rho_{i + 1} \alpha/\rho_i \omega_i$
+    \item $p_{i+1} = r + \beta(p_i - \omega_i v_i)$
+    \item $v_{i + 1} = Jp_{i + 1}$
+    \item $\alpha = \rho_{i + 1}/\hat{r_0} \cdot v_{i + 1}$
+    \item $h = \Delta_i + \alpha p_{i + 1}$
+    \item If $Jh$ is within tolerance of $\eta$, set $\Delta = h$ and exit.
+    \item $s = r_i - \alpha v_{i + 1}$
+    \item $t = Js$
+    \item $\omega_{i + 1} = t \cdot s/|t|^2$
+    \item $\Delta_{i + 1} = h + \omega_{i + 1}s$
+    \item If $J\Delta_{i  + 1}$ is within tolerance of $\eta$, exit.
+    \item $r_{i + 1} = s-\omega_{i + 1}t$
+    \item Repeat from step 5 until a solution is found.
+\end{enumerate}
+The critical part of the method is that every instance of using $J$ to transport between the manifolds can be replaced with a flow process. If the acceptance probability and calculation of the expectation values as given in \ref{eqn:observable_samples} could be reformulated to not require the Jacobian, then the costly matrix operations can be completely eliminated. Furthermore the $N^2$ coupled complex ODEs do not need to be solved to calculate it either. As can be seen in Figure [TBA] using BiCGSTAB is marginally faster than solving the matrix equation using LU decomposition for the typical use case for reasonable flow time. \newline \newline
+However, for a number of reasons this technique was not adapted into the full algorithm. Firstly the increased variance as shown in Figure [TBA] made estimations of the run time of the algorithm much less precise, causing issues for the allocation of resources. Secondly, BiCGSTAB becomes less effective relative to the 'brute force' method as the flow time is increased, as the manifold typically becomes more distorted often requiring that the iterative solver requires more passes to converge and solving the scalar flow equation in place of the matrix algebra becomes more computationally expensive. Thirdly this method still required the restructuring of the rest of the MCMC system to not depend on the Jacobian. Finally an optimisation that can be applied when working with the Jacobian but not BiCGSTAB is that the when evaluating the $n + 1$th state, $J_n$ is already known from the previous MCMC update. This reuse of the Jacobian firmly puts it ahead of BiCGSTAB in practical terms.
